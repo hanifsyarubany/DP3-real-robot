@@ -101,8 +101,10 @@ class ObservationBuilder:
         if not pathlib.Path(urdf).exists():
             raise FileNotFoundError(f"G1 URDF not found: {urdf}")
 
-        self._model, _, _ = pin.buildModelsFromUrdf(urdf)
-        self._data = self._model.createData()
+        # Kinematic model only — no mesh files needed for FK/IK.
+        # buildModelsFromUrdf also loads visual meshes (→ FileNotFoundError on STL).
+        self._model = pin.buildModelFromUrdf(urdf)
+        self._data  = self._model.createData()
 
         self._left_frame  = self._model.getFrameId(_LEFT_EEF_LINK)
         self._right_frame = self._model.getFrameId(_RIGHT_EEF_LINK)

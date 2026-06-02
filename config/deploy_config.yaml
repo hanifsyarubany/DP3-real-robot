@@ -1,0 +1,67 @@
+# ── Real Robot Deployment Config ──────────────────────────────────────────────
+# Edit sections marked CONFIGURE before first use.
+
+# ── Robot ─────────────────────────────────────────────────────────────────────
+robot:
+  network_interface: "eth0"      # CONFIGURE: Ethernet interface to G1
+  control_freq_hz: 50.0
+
+# ── Policy (EquivDP3) ──────────────────────────────────────────────────────────
+policy:
+  checkpoint: "checkpoint/final.ckpt"
+  device: "cuda"
+  n_obs_steps: 2
+  n_action_steps: 8
+  n_pcd_points: 1024
+  hlc_freq_hz: 6.0
+
+# ── Camera ────────────────────────────────────────────────────────────────────
+camera:
+  serial_number: null
+  width: 640
+  height: 480
+  fps: 30
+  # Camera-to-pelvis extrinsic from Arena G1 embodiment (_DEFAULT_G1_CAMERA_OFFSET):
+  #   position_xyz=(0.04485, 0.0, 0.35325)  rotation_wxyz=(0.32651,-0.62721,0.62721,-0.32651)
+  # Camera sits 4.5 cm forward + 35 cm above pelvis, pointing forward-down (~35 deg below horizon).
+  # This is the NOMINAL value used during training data collection.
+  # VERIFY physically: measure your actual camera mount and update if it differs.
+  T_cam_to_pelvis:
+    - [-0.0,   -0.5736,  0.8192,  0.0449]
+    - [-1.0,   -0.0,     0.0,     0.0   ]
+    - [ 0.0,   -0.8192, -0.5736,  0.3533]
+    - [ 0.0,    0.0,     0.0,     1.0   ]
+  pcd_z_min: 0.10
+  pcd_z_max: 2.50
+
+# ── WBC ───────────────────────────────────────────────────────────────────────
+wbc:
+  # G1 URDF (29 DOF) for pinocchio FK + PINK IK
+  urdf_path: "/workspaces/isaaclab_arena/submodules/IsaacLab/source/TWIST2/assets/g1/g1_custom_collision_29dof.urdf"
+  mesh_dir:  "/workspaces/isaaclab_arena/submodules/IsaacLab/source/TWIST2/assets/g1/"
+
+  # HOMIE v2 locomotion ONNX (development mode — sport mode arm SDK is incompatible)
+  # Downloaded from Nucleus via retrieve_file_path and stored locally.
+  loco_stand_onnx: "checkpoint/homie_v2/stand.onnx"
+  loco_walk_onnx:  "checkpoint/homie_v2/walk.onnx"
+  loco_config:     "config/g1_homie_v2.yaml"
+
+  # PINK IK settings
+  ik_dt: 0.02
+  ik_steps_per_frame: 1
+  arm_kp: 80.0
+  arm_kd: 2.0
+  waist_kp: 200.0
+  waist_kd: 5.0
+
+  # Lower body PD gains (for HOMIE targets)
+  leg_kp:   150.0
+  leg_kd:   4.0
+
+# ── Safety ────────────────────────────────────────────────────────────────────
+safety:
+  max_loco_vx:   0.3
+  max_loco_vy:   0.2
+  max_loco_vyaw: 0.3
+  max_arm_joint_delta_per_step: 0.08
+  workspace_radius_m: 0.75

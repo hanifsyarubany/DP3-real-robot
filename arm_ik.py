@@ -100,10 +100,10 @@ class ArmIK:
         if not pathlib.Path(urdf).exists():
             raise FileNotFoundError(f"G1 URDF not found at: {urdf}")
 
-        # Load pinocchio model
-        self.model, self.collision_model, self.visual_model = \
-            pin.buildModelsFromUrdf(urdf)
-        self.data = self.model.createData()
+        # Kinematic model only — no mesh files needed for IK.
+        # buildModelsFromUrdf also loads visual meshes (→ FileNotFoundError on STL).
+        self.model = pin.buildModelFromUrdf(urdf)
+        self.data  = self.model.createData()
 
         # Current joint configuration (full model, nq dims)
         self.q_current = pin.neutral(self.model)
